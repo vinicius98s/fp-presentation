@@ -1,0 +1,435 @@
+import { CodeSurfer, CodeSurferColumns, Step  } from "code-surfer"
+import { nightOwl } from "@code-surfer/themes"
+export const theme = nightOwl
+
+# Functional Programming
+### My experience and some concepts
+
+---
+
+# My background
+- Joined a startup back in 2019 as Fullstack Developer
+- Never had any contact with functional programming before
+
+---
+
+<CodeSurfer>
+
+```ts title="Some of our server code would look like this"
+// ...some imports and types
+
+function createUser(userInput): TE.TaskEither<CreateUserError, User> {
+  return pipe(
+    userInput,
+    validateUserInput,
+    TE.fromEither,
+    TE.map(flow(createUserInDatabase)),
+  );
+}
+```
+
+</CodeSurfer>
+
+---
+
+#### So that was my reaction
+
+<img src="./confused.gif" style={{ width: "25vw" }} />
+
+---
+
+## Let's dive into some concepts
+
+---
+
+## Functions as first-class citizens
+
+<figure style={{ width: "50vw" }}>
+<img src="./functions.png" style={{ height: "auto" }} />
+<figcaption style={{ fontSize: 16, textAlign: "center" }}>Functional programming design patterns by Scott Wlaschin (https://www.youtube.com/watch?v=E8I19uA-wGY)</figcaption>
+</figure>
+
+---
+
+## Pure functions
+<p style={{ maxWidth: "800px", textAlign: "center" }}>
+Functions that always return the same result given the same arguments, <i>and they do not produce any side effects</i>.
+</p>
+
+---
+
+<CodeSurferColumns>
+
+<Step title="Pure">
+
+```ts
+const arr = [1, 2, 3, 4, 5];
+```
+
+```ts
+arr.slice(0, 3); // [1, 2, 3]
+arr.slice(0, 3); // [1, 2, 3]
+arr.slice(0, 3); // [1, 2, 3]
+```
+
+</Step>
+
+<Step title="Impure">
+
+```ts
+const arr = [1, 2, 3, 4, 5];
+```
+
+```ts
+arr.splice(0, 3); // [1, 2, 3]
+arr.splice(0, 3); // [4, 5]
+arr.splice(0, 3); // []
+```
+
+</Step>
+
+</CodeSurferColumns>
+
+---
+
+## Side effects
+<p style={{ maxWidth: "800px", textAlign: "center" }}>
+Any action performed by a function that affects the state of the program outside of the function itself. This can include modifying global variables, writing to files, or performing input/output operations.
+</p>
+
+---
+
+## Curry
+
+<figure style={{ width: "30vw" }}>
+<img src="./curry.gif" style={{ height: "auto" }} />
+<figcaption style={{ fontSize: 16, textAlign: "center" }}>Not this one</figcaption>
+</figure>
+
+---
+
+<p style={{maxWidth: '800px', textAlign: 'center'}}>
+Curry is a technique that allows for the partial application of functions. This means that a function can be called with fewer arguments than it requires and the remaining ones can be passed at a later time.
+</p>
+
+---
+
+<CodeSurfer>
+
+```ts title="Let's take a look at a simple example"
+function add(x: number, y: number): number {
+  return x + y;
+}
+
+add(1, 2); // 3
+```
+
+</CodeSurfer>
+
+---
+
+<CodeSurfer>
+
+```ts title="Curried version"
+function add(x: number) {
+  return function(y: number): number {
+    return x + y;
+  }
+}
+
+add(1)(2); // 3
+```
+
+```ts title="Partial applications in practice"
+function add(x: number) {
+  return function(y: number): number {
+    return x + y;
+  }
+}
+
+add(1)(2); // 3
+
+const increment = add(1);
+const addTen = add(10);
+
+increment(2); // 3
+addTen(2); // 12
+```
+
+</CodeSurfer>
+
+---
+
+## Composition
+
+<p style={{maxWidth: '800px', textAlign: 'center'}}>
+It allows for the combination of functions to create new functions, making code more modular and easier to maintain. 
+
+Composition is based on the mathematical concept of composition.
+</p>
+
+---
+
+Let's say we have two functions *`f`* and *`g`*, so following the concept of composition
+
+```
+h = f ∘ g
+```
+
+```
+h(x) == g(f(x))
+```
+
+---
+
+## Functors 
+A Functor is a type that implements map and obeys some laws:
+
+- Functors must preserve identity morphisms
+- Functors preserve composition of morphisms
+
+<p style={{ fontSize: 16, texDecoration: "none" }}>
+reference: https://wiki.haskell.org/Functor
+</p>
+
+---
+
+<CodeSurfer>
+
+```ts
+class Functor<T> {
+  private $value: T;
+
+  static of<T>(x: T) {
+    return new Functor<T>(x);
+  }
+
+  constructor(x: T) {
+    this.$value = x;
+  }
+
+  map<U>(fn: (x: T) => U) {
+    return Functor.of<U>(fn(this.$value));
+  }
+}
+```
+
+```ts 4[10:21]
+class Functor<T> {
+  private $value: T;
+
+  static of<T>(x: T) {
+    return new Functor<T>(x);
+  }
+
+  constructor(x: T) {
+    this.$value = x;
+  }
+
+  map<U>(fn: (x: T) => U) {
+    return Functor.of<U>(fn(this.$value));
+  }
+}
+```
+
+```ts 12[3:26]
+class Functor<T> {
+  private $value: T;
+
+  static of<T>(x: T) {
+    return new Functor<T>(x);
+  }
+
+  constructor(x: T) {
+    this.$value = x;
+  }
+
+  map<U>(fn: (x: T) => U) {
+    return Functor.of<U>(fn(this.$value));
+  }
+}
+
+Functor<string>.of('hello').map(x => `${x} world`);
+// Functor('hello world')
+```
+
+```ts 17:18
+class Functor<T> {
+  private $value: T;
+
+  static of<T>(x: T) {
+    return new Functor<T>(x);
+  }
+
+  constructor(x: T) {
+    this.$value = x;
+  }
+
+  map<U>(fn: (x: T) => U) {
+    return Functor.of<U>(fn(this.$value));
+  }
+}
+
+Functor<string>.of('hello').map(x => `${x} world`);
+// Functor('hello world')
+```
+
+```ts 17:18
+class Functor<T> {
+  private $value: T;
+
+  static of<T>(x: T) {
+    return new Functor<T>(x);
+  }
+
+  constructor(x: T) {
+    this.$value = x;
+  }
+
+  map<U>(fn: (x: T) => U) {
+    return Functor.of<U>(fn(this.$value));
+  }
+}
+
+Functor.of('hello').map(x => `${x} world`);
+// Functor('hello world')
+```
+
+</CodeSurfer>
+
+---
+
+# Real world example
+<video autoPlay src="input.webm" />
+
+---
+
+# Option
+
+Option is used to represent a possible absence of value, so we don't have to deal with `undefined`, `null` or `0` for example
+
+---
+
+<CodeSurfer>
+
+```ts
+import * as O from "fp-ts/Option"
+
+O.some('hello')
+O.none // represents no value
+
+```
+
+</CodeSurfer>
+
+---
+
+# Either
+Represents a value of one of two possible types (a disjoint union)
+
+An instance of Either is either an instance of Left or Right
+
+---
+
+<CodeSurfer>
+
+```ts
+import * as E from "fp-ts/Either"
+
+function isPositive(n: number): E.Either<string, number> {
+  if (n >= 0) { 
+    return E.right(n);
+  }
+
+  return E.left('Your number is negative');
+}
+
+```
+
+```ts 3[32:56]
+import * as E from "fp-ts/Either"
+
+function isPositive(n: number): E.Either<string, number> {
+  if (n >= 0) { 
+    return E.right(n);
+  }
+
+  return E.left('Your number is negative');
+}
+
+isPositive(-1); // E.left('Your number is negative')
+isPositive(10); // E.right(10)
+
+```
+
+```ts 11:12
+import * as E from "fp-ts/Either"
+
+function isPositive(n: number): E.Either<string, number> {
+  if (n >= 0) { 
+    return E.right(n);
+  }
+
+  return E.left('Your number is negative');
+}
+
+isPositive(-1); // Left('Your number is negative')
+isPositive(10); // Right(10)
+```
+
+</CodeSurfer>
+
+---
+
+### Error state
+
+<video autoPlay src="input.webm" />
+
+<CodeSurfer>
+
+```ts
+const [emailError, setEmailError] = useState<string>('');
+```
+
+```ts
+import * as O from "fp-ts/Option"
+
+const [emailError, setEmailError] = useState<O.Option<string>>(O.none);
+```
+
+</CodeSurfer>
+
+---
+
+<CodeSurfer>
+
+```ts title="Combining Option and Either"
+const handleEmailInputChange = (email: string) => {
+  pipe(
+    email,
+    validateEmail, // Either(EmailError, string)
+    E.match(
+      () => setEmailError(O.none),
+      (error) => setEmailError(O.some(error))
+    ),
+  );
+};
+```
+
+```ts title="Combining Option and Either"
+const handleEmailInputChange = (email: string) => {
+  pipe(
+    validateEmail(email), // Either(EmailError, string)
+    E.match(
+      () => setEmailError(O.none),
+      (error) => setEmailError(O.some(error))
+    ),
+  );
+};
+```
+
+</CodeSurfer>
+
+---
+
+# Thank you!
