@@ -428,6 +428,32 @@ const handleEmailInputChange = (email: string) => {
 };
 ```
 
+```ts 5:6 title="Combining Option and Either"
+const handleEmailInputChange = (email: string) => {
+  pipe(
+    validateEmail(email),
+    E.match(
+      // No error found when validating the email
+      () => setEmailError(O.none), 
+      (error) => setEmailError(O.some(error))
+    ),
+  );
+};
+```
+
+```ts 6:7 title="Combining Option and Either"
+const handleEmailInputChange = (email: string) => {
+  pipe(
+    validateEmail(email),
+    E.match(
+      () => setEmailError(O.none),
+      // Found an error when validating the email
+      (error) => setEmailError(O.some(error)) 
+    ),
+  );
+};
+```
+
 </CodeSurfer>
 
 ---
